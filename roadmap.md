@@ -1,0 +1,4 @@
+- [x] Clone and inspect the requested GitHub repository
+- [x] Import repository files unchanged into the project
+- [x] Install repository dependencies
+- [ ] Verify the imported project can start in this environment
