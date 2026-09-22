@@ -26,6 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { EyeRecordsTab } from "@/components/dashboard/eye/EyeRecordsTab";
 import { getClinicTerms } from "@/config/clinicTerminology";
 import { CreateInvoiceDialog } from "@/components/dashboard/CreateInvoiceDialog";
+import { InvoiceDetailDialog } from "@/components/dashboard/InvoiceDetailDialog";
 import { CreatePrescriptionDialog } from "@/components/dashboard/CreatePrescriptionDialog";
 import { CreateLabCaseDialog } from "@/components/dashboard/CreateLabCaseDialog";
 import { toast } from "@/hooks/use-toast";
@@ -90,6 +91,7 @@ export default function PatientProfilePage() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [invoiceOpen, setInvoiceOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [prescriptionOpen, setPrescriptionOpen] = useState(false);
   const [labCaseOpen, setLabCaseOpen] = useState(false);
   const [noteDialogOpen, setNoteDialogOpen] = useState(false);
@@ -419,7 +421,20 @@ export default function PatientProfilePage() {
                   </thead>
                   <tbody>
                     {invoices.map((inv: any) => (
-                      <tr key={inv.id} className="border-b last:border-0 hover:bg-muted/20">
+                      <tr
+                        key={inv.id}
+                        className="border-b last:border-0 hover:bg-muted/20 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => setSelectedInvoice({ ...inv, patient_name: `${patient.first_name} ${patient.last_name}` })}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            setSelectedInvoice({ ...inv, patient_name: `${patient.first_name} ${patient.last_name}` });
+                          }
+                        }}
+                        aria-label={`View invoice ${inv.invoice_number}`}
+                      >
                         <td className="py-2 px-4 font-mono text-xs">{inv.invoice_number}</td>
                         <td className="py-2 px-4 text-muted-foreground">{inv.invoice_date}</td>
                         <td className="py-2 px-4 font-medium">{formatCurrency(Number(inv.total_amount))}</td>
@@ -627,6 +642,7 @@ export default function PatientProfilePage() {
       <EditPatientDialog patient={patient} open={editOpen} onOpenChange={setEditOpen} />
 
       <CreateInvoiceDialog open={invoiceOpen} onOpenChange={setInvoiceOpen} preselectedPatientId={patientId} />
+      <InvoiceDetailDialog open={!!selectedInvoice} onOpenChange={(open) => { if (!open) setSelectedInvoice(null); }} invoice={selectedInvoice} />
       <CreatePrescriptionDialog open={prescriptionOpen} onOpenChange={setPrescriptionOpen} preselectedPatientId={patientId} />
       <CreateLabCaseDialog open={labCaseOpen} onOpenChange={setLabCaseOpen} preselectedPatientId={patientId} />
 
