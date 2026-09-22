@@ -68,7 +68,30 @@ export function usePatientInvoices(patientId: string | undefined) {
         .eq("patient_id", patientId!)
         .order("invoice_date", { ascending: false });
       if (error) throw error;
-      return data || [];
+
+      const invoiceIds = (data || []).map((invoice: any) => invoice.id);
+      const { data: payments, error: paymentsError } = invoiceIds.length
+        ? await (supabase as any)
+            .from("payments")
+            .select("invoice_id, amount")
+            .in("invoice_id", invoiceIds)
+        : { data: [], error: null };
+      if (paymentsError) throw paymentsError;
+
+      const paidByInvoice = (payments || []).reduce((totals: Record<string, number>, payment: any) => {
+        totals[payment.invoice_id] = (totals[payment.invoice_id] || 0) + Number(payment.amount || 0);
+        return totals;
+      }, {});
+
+      return (data || []).map((invoice: any) => ({
+        ...invoice,
+        discount_percent: Number(invoice.discount || 0),
+        total_amount: Number(invoice.total || 0),
+        subtotal: Number(invoice.subtotal || 0),
+        amount_paid: paidByInvoice[invoice.id] || 0,
+        notes: invoice.notes || "",
+        patient_name: "",
+      }));
     },
   });
 }
